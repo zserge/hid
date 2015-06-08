@@ -138,7 +138,7 @@ func (hid *usbDevice) Write(data []byte, timeout time.Duration) (int, error) {
 		ms := timeout / (1 * time.Millisecond)
 		return hid.intr(hid.epOut, data, int(ms))
 	} else {
-		return hid.ctrl(0xa1, 0x09, 2<<8+0, int(hid.info.Interface), data, len(data))
+		return hid.ctrl(0x21, 0x09, 2<<8+0, int(hid.info.Interface), data, len(data))
 	}
 }
 
@@ -146,7 +146,6 @@ func (hid *usbDevice) HIDReport() ([]byte, error) {
 	buf := make([]byte, 256, 256)
 	// In transfer, recepient interface, GetDescriptor, HidReport type
 	n, err := hid.ctrl(0x81, 0x06, 0x22<<8+int(hid.info.Interface), 0, buf, 1000)
-	log.Println(n, err)
 	if err != nil {
 		return nil, err
 	} else {
@@ -167,7 +166,7 @@ func (hid *usbDevice) GetReport(report int) ([]byte, error) {
 
 func (hid *usbDevice) SetReport(report int, data []byte) error {
 	// 00100001, SET_REPORT, type*256+id, intf, len, data
-	_, err := hid.ctrl(0xa1, 0x09, 3<<8+report, int(hid.info.Interface), data, 1000)
+	_, err := hid.ctrl(0x21, 0x09, 3<<8+report, int(hid.info.Interface), data, 1000)
 	return err
 }
 
