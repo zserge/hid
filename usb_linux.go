@@ -266,8 +266,8 @@ func walker(path string, cb func(Device)) error {
 }
 
 func UsbWalk(cb func(Device)) {
-	filepath.Walk(DevBusUsb, func(f string, fi os.FileInfo, _ error) error {
-		if fi.IsDir() {
+	filepath.Walk(DevBusUsb, func(f string, fi os.FileInfo, err error) error {
+		if err != nil || fi.IsDir() {
 			return nil
 		}
 		if err := walker(f, cb); err != nil {
