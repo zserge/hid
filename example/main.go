@@ -7,32 +7,30 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
-	"github.com/peterh/liner"
+	"github.com/chzyer/readline"
 	"github.com/zserge/hid"
 )
 
 func shell(device hid.Device, inputReportSize int) {
 	if err := device.Open(); err != nil {
-		fmt.Println("Open error: ", err)
+		log.Println("Open error: ", err)
 		return
 	}
 	defer device.Close()
 
 	if report, err := device.HIDReport(); err != nil {
-		fmt.Println("HID report error:", err)
+		log.Println("HID report error:", err)
 		return
 	} else {
-		fmt.Println("HID report", hex.EncodeToString(report))
+		log.Println("HID report", hex.EncodeToString(report))
 	}
 
 	go func() {
 		for {
 			if buf, err := device.Read(inputReportSize, 1*time.Second); err == nil {
-				fmt.Println("\rInput report:  ", hex.EncodeToString(buf))
-				syscall.Kill(syscall.Getpid(), syscall.SIGWINCH)
+				log.Println("Input report:  ", hex.EncodeToString(buf))
 			}
 		}
 	}()
@@ -40,71 +38,69 @@ func shell(device hid.Device, inputReportSize int) {
 	commands := map[string]func([]byte){
 		"output": func(b []byte) {
 			if len(b) == 0 {
-				fmt.Println("Invalid input: output report data expected")
+				log.Println("Invalid input: output report data expected")
 			} else if n, err := device.Write(b, 1*time.Second); err != nil {
-				fmt.Println("Output report write failed:", err)
+				log.Println("Output report write failed:", err)
 			} else {
-				fmt.Printf("Output report: written %d bytes\n", n)
+				log.Printf("Output report: written %d bytes\n", n)
 			}
 		},
 		"set-feature": func(b []byte) {
 			if len(b) == 0 {
-				fmt.Println("Invalid input: feature report data expected")
+				log.Println("Invalid input: feature report data expected")
 			} else if err := device.SetReport(0, b); err != nil {
-				fmt.Println("Feature report write failed:", err)
+				log.Println("Feature report write failed:", err)
 			} else {
-				fmt.Printf("Feature report: " + hex.EncodeToString(b) + "\n")
+				log.Printf("Feature report: " + hex.EncodeToString(b) + "\n")
 			}
 		},
 		"get-feature": func(b []byte) {
 			if b, err := device.GetReport(0); err != nil {
-				fmt.Println("Feature report read failed:", err)
+				log.Println("Feature report read failed:", err)
 			} else {
-				fmt.Println("Feature report: " + hex.EncodeToString(b) + "\n")
+				log.Println("Feature report: " + hex.EncodeToString(b) + "\n")
 			}
 		},
 	}
 
-	line := liner.NewLiner()
-	defer line.Close()
-	line.SetCtrlCAborts(true)
-	line.SetCompleter(func(line string) (c []string) {
-		for cmd, _ := range commands {
-			if strings.HasPrefix(cmd, strings.ToLower(line)) {
-				c = append(c, cmd+" ")
-			}
-		}
-		return
+	var completer = readline.NewPrefixCompleter(
+		readline.PcItem("output"),
+		readline.PcItem("set-feature"),
+		readline.PcItem("get-feature"),
+	)
+	rl, err := readline.NewEx(&readline.Config{
+		Prompt:       "> ",
+		AutoComplete: completer,
 	})
+	if err != nil {
+		panic(err)
+	}
+
+	defer rl.Close()
+	log.SetOutput(rl.Stderr())
 
 out:
 	for {
-		if s, err := line.Prompt("$ "); err == nil {
-			if len(s) > 0 {
-				line.AppendHistory(s)
-				s = strings.ToLower(s)
-				for cmd, f := range commands {
-					if strings.HasPrefix(s, cmd) {
-						s = strings.TrimSpace(s[len(cmd):])
-						raw := []byte{}
-						if len(s) > 0 {
-							raw = make([]byte, len(s)/2, len(s)/2)
-							if _, err := hex.Decode(raw, []byte(s)); err != nil {
-								fmt.Println("Invalid input:", err)
-								fmt.Println(">>", hex.EncodeToString(raw))
-								continue out
-							}
-						}
-						f(raw)
+		line, err := rl.Readline()
+		if err != nil {
+			break
+		}
+		line = strings.ToLower(line)
+		for cmd, f := range commands {
+			if strings.HasPrefix(line, cmd) {
+				line = strings.TrimSpace(line[len(cmd):])
+				raw := []byte{}
+				if len(line) > 0 {
+					raw = make([]byte, len(line)/2, len(line)/2)
+					if _, err := hex.Decode(raw, []byte(line)); err != nil {
+						log.Println("Invalid input:", err)
+						log.Println(">>", hex.EncodeToString(raw))
 						continue out
 					}
 				}
+				f(raw)
+				continue out
 			}
-		} else {
-			if err != liner.ErrPromptAborted {
-				fmt.Println("Input error:", err)
-			}
-			break
 		}
 	}
 }
