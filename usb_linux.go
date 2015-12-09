@@ -21,6 +21,9 @@ type usbDevice struct {
 	epIn  int
 	epOut int
 
+	inputPacketSize  uint16
+	outputPacketSize uint16
+
 	path string
 }
 
@@ -122,8 +125,8 @@ func (hid *usbDevice) intr(ep int, data []byte, t int) (int, error) {
 	}
 }
 
-func (hid *usbDevice) Read(n int, timeout time.Duration) ([]byte, error) {
-	data := make([]byte, n, n)
+func (hid *usbDevice) Read(timeout time.Duration) ([]byte, error) {
+	data := make([]byte, hid.inputPacketSize, hid.inputPacketSize)
 	ms := timeout / (1 * time.Millisecond)
 	n, err := hid.intr(hid.epIn, data, int(ms))
 	if err == nil {
@@ -250,8 +253,10 @@ func walker(path string, cb func(Device)) error {
 							}
 							if e.Address > 0x80 && device.epIn == 0 {
 								device.epIn = int(e.Address)
+								device.inputPacketSize = e.MaxPacketSize
 							} else if e.Address < 0x80 && device.epOut == 0 {
 								device.epOut = int(e.Address)
+								device.outputPacketSize = e.MaxPacketSize
 							}
 						}
 					}

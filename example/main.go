@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -13,7 +12,7 @@ import (
 	"github.com/zserge/hid"
 )
 
-func shell(device hid.Device, inputReportSize int) {
+func shell(device hid.Device) {
 	if err := device.Open(); err != nil {
 		log.Println("Open error: ", err)
 		return
@@ -29,7 +28,7 @@ func shell(device hid.Device, inputReportSize int) {
 
 	go func() {
 		for {
-			if buf, err := device.Read(inputReportSize, 1*time.Second); err == nil {
+			if buf, err := device.Read(1 * time.Second); err == nil {
 				log.Println("Input report:  ", hex.EncodeToString(buf))
 			}
 		}
@@ -109,9 +108,9 @@ func main() {
 
 	if len(os.Args) == 2 && (os.Args[1] == "-h" || os.Args[1] == "--help") {
 		fmt.Println("USAGE:")
-		fmt.Printf("  %s                list USB HID devices\n", os.Args[0])
-		fmt.Printf("  %s <id> [size]    open USB HID device shell for the given input report size\n", os.Args[0])
-		fmt.Printf("  %s -h|--help      show this help\n", os.Args[0])
+		fmt.Printf("  %s              list USB HID devices\n", os.Args[0])
+		fmt.Printf("  %s <id>         open USB HID device shell for the given input report size\n", os.Args[0])
+		fmt.Printf("  %s -h|--help    show this help\n", os.Args[0])
 		fmt.Println()
 		return
 	}
@@ -130,16 +129,6 @@ func main() {
 		return
 	}
 
-	inputReportSize := 1
-
-	if len(os.Args) > 2 {
-		if n, err := strconv.Atoi(os.Args[2]); err == nil {
-			inputReportSize = n
-		} else {
-			log.Fatal(err)
-		}
-	}
-
 	hid.UsbWalk(func(device hid.Device) {
 		info := device.Info()
 		id := fmt.Sprintf("%04x:%04x:%04x", info.Vendor, info.Product, info.Revision)
@@ -147,6 +136,6 @@ func main() {
 			return
 		}
 
-		shell(device, inputReportSize)
+		shell(device)
 	})
 }
