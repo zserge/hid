@@ -28,7 +28,7 @@ func shell(device hid.Device) {
 
 	go func() {
 		for {
-			if buf, err := device.Read(1 * time.Second); err == nil {
+			if buf, err := device.Read(-1, 1*time.Second); err == nil {
 				log.Println("Input report:  ", hex.EncodeToString(buf))
 			}
 		}

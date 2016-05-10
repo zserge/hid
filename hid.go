@@ -26,6 +26,6 @@ type Device interface {
 	HIDReport() ([]byte, error)
 	SetReport(int, []byte) error
 	GetReport(int) ([]byte, error)
-	Read(ms time.Duration) ([]byte, error)
+	Read(size int, ms time.Duration) ([]byte, error)
 	Write(data []byte, ms time.Duration) (int, error)
 }

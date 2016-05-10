@@ -125,8 +125,11 @@ func (hid *usbDevice) intr(ep int, data []byte, t int) (int, error) {
 	}
 }
 
-func (hid *usbDevice) Read(timeout time.Duration) ([]byte, error) {
-	data := make([]byte, hid.inputPacketSize, hid.inputPacketSize)
+func (hid *usbDevice) Read(size int, timeout time.Duration) ([]byte, error) {
+	if size < 0 {
+		size = int(hid.inputPacketSize)
+	}
+	data := make([]byte, size, size)
 	ms := timeout / (1 * time.Millisecond)
 	n, err := hid.intr(hid.epIn, data, int(ms))
 	if err == nil {
