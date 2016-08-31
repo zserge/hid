@@ -43,7 +43,7 @@ func (hid *usbDevice) Open() (err error) {
 	if hid.f, err = os.OpenFile(hid.path, os.O_RDWR, 0644); err != nil {
 		return
 	} else {
-		return nil //hid.claim()
+		return hid.claim()
 	}
 }
 
