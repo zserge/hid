@@ -27,6 +27,11 @@ type usbDevice struct {
 	path string
 }
 
+func (hid *usbDevice) SetEndpoint(ep int) {
+	hid.epOut = ep
+	hid.epIn = ep + 0x80
+}
+
 func (hid *usbDevice) Open() (err error) {
 	if hid.f != nil {
 		return errors.New("device is already opened")
@@ -34,7 +39,7 @@ func (hid *usbDevice) Open() (err error) {
 	if hid.f, err = os.OpenFile(hid.path, os.O_RDWR, 0644); err != nil {
 		return
 	} else {
-		return hid.claim()
+		return nil //hid.claim()
 	}
 }
 
