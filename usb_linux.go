@@ -32,6 +32,10 @@ func (hid *usbDevice) SetEndpoint(ep int) {
 	hid.epIn = ep + 0x80
 }
 
+func (hid *usbDevice) SetInterface(ifno int) {
+	hid.info.Interface = uint8(ifno)
+}
+
 func (hid *usbDevice) Open() (err error) {
 	if hid.f != nil {
 		return errors.New("device is already opened")
