@@ -27,15 +27,6 @@ type usbDevice struct {
 	path string
 }
 
-func (hid *usbDevice) SetEndpoint(ep int) {
-	hid.epOut = ep
-	hid.epIn = ep + 0x80
-}
-
-func (hid *usbDevice) SetInterface(ifno int) {
-	hid.info.Interface = uint8(ifno)
-}
-
 func (hid *usbDevice) Open() (err error) {
 	if hid.f != nil {
 		return errors.New("device is already opened")
@@ -238,6 +229,10 @@ func walker(path string, cb func(Device)) error {
 							device = nil
 						}
 					case UsbDescTypeInterface:
+						if device != nil {
+							cb(device)
+							device = nil
+						}
 						expected[UsbDescTypeEndpoint] = true
 						expected[UsbDescTypeReport] = true
 						i := &interfaceDesc{}
@@ -259,6 +254,11 @@ func walker(path string, cb func(Device)) error {
 						}
 					case UsbDescTypeEndpoint:
 						if device != nil {
+							if device.epIn != 0 && device.epOut != 0 {
+								cb(device)
+								device.epIn = 0
+								device.epOut = 0
+							}
 							e := &endpointDesc{}
 							if err := cast(body, e); err != nil {
 								return err

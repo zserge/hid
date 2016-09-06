@@ -23,8 +23,6 @@ type Device interface {
 	Open() error
 	Close()
 	Info() Info
-	SetEndpoint(int)
-	SetInterface(int)
 	HIDReport() ([]byte, error)
 	SetReport(int, []byte) error
 	GetReport(int) ([]byte, error)
