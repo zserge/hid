@@ -229,6 +229,10 @@ func walker(path string, cb func(Device)) error {
 							device = nil
 						}
 					case UsbDescTypeInterface:
+						if device != nil {
+							cb(device)
+							device = nil
+						}
 						expected[UsbDescTypeEndpoint] = true
 						expected[UsbDescTypeReport] = true
 						i := &interfaceDesc{}
@@ -250,6 +254,11 @@ func walker(path string, cb func(Device)) error {
 						}
 					case UsbDescTypeEndpoint:
 						if device != nil {
+							if device.epIn != 0 && device.epOut != 0 {
+								cb(device)
+								device.epIn = 0
+								device.epOut = 0
+							}
 							e := &endpointDesc{}
 							if err := cast(body, e); err != nil {
 								return err

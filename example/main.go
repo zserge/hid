@@ -120,7 +120,7 @@ func main() {
 		found := false
 		hid.UsbWalk(func(device hid.Device) {
 			info := device.Info()
-			fmt.Printf("%04x:%04x:%04x\n", info.Vendor, info.Product, info.Revision)
+			fmt.Printf("%04x:%04x:%04x:%02x\n", info.Vendor, info.Product, info.Revision, info.Interface)
 			found = true
 		})
 		if !found {
@@ -131,7 +131,7 @@ func main() {
 
 	hid.UsbWalk(func(device hid.Device) {
 		info := device.Info()
-		id := fmt.Sprintf("%04x:%04x:%04x", info.Vendor, info.Product, info.Revision)
+		id := fmt.Sprintf("%04x:%04x:%04x:%02x", info.Vendor, info.Product, info.Revision, info.Interface)
 		if id != os.Args[1] {
 			return
 		}
