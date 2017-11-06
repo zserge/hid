@@ -95,6 +95,10 @@ func (hid *usbDevice) release() error {
 	return nil
 }
 
+func (hid *usbDevice) Ctrl(rtype, req, val, index int, data []byte, t int) (int, error) {
+	return hid.ctrl(rtype, req, val, index, data, t)
+}
+
 func (hid *usbDevice) ctrl(rtype, req, val, index int, data []byte, t int) (int, error) {
 	s := usbfsCtrl{
 		ReqType: uint8(rtype),
