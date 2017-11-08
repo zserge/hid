@@ -1,6 +1,10 @@
 package hid
 
-import "time"
+import (
+	"io/ioutil"
+	"log"
+	"time"
+)
 
 //
 // General information about the HID device
@@ -28,4 +32,8 @@ type Device interface {
 	GetReport(int) ([]byte, error)
 	Read(size int, ms time.Duration) ([]byte, error)
 	Write(data []byte, ms time.Duration) (int, error)
+	Ctrl(rtype, req, val, index int, data []byte, t int) (int, error)
 }
+
+// Default Logger setting
+var Logger = log.NewLogger(ioutil.Discard, log.LstdFlags)
