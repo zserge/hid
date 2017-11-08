@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"syscall"
@@ -68,7 +67,7 @@ func (hid *usbDevice) claim() error {
 		IoctlCode: USBDEVFS_DISCONNECT,
 		Data:      0,
 	}); r == -1 {
-		log.Println("driver disconnect failed:", r, errno)
+		Logger.Println("driver disconnect failed:", r, errno)
 	}
 
 	if r, errno := hid.ioctl(USBDEVFS_CLAIM, &ifno); r == -1 {
@@ -90,7 +89,7 @@ func (hid *usbDevice) release() error {
 		IoctlCode: USBDEVFS_CONNECT,
 		Data:      0,
 	}); r == -1 {
-		log.Println("driver connect failed:", r, errno)
+		Logger.Println("driver connect failed:", r, errno)
 	}
 	return nil
 }
@@ -292,7 +291,7 @@ func UsbWalk(cb func(Device)) {
 			return nil
 		}
 		if err := walker(f, cb); err != nil {
-			log.Println("UsbWalk: ", err)
+			Logger.Println("UsbWalk: ", err)
 		}
 		return nil
 	})
