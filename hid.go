@@ -36,4 +36,4 @@ type Device interface {
 }
 
 // Default Logger setting
-var Logger = log.NewLogger(ioutil.Discard, log.LstdFlags)
+var Logger = log.New(ioutil.Discard, "hid", log.LstdFlags)
