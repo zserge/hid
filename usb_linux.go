@@ -72,8 +72,6 @@ func (hid *usbDevice) claim() error {
 
 	if r, errno := hid.ioctl(USBDEVFS_CLAIM, &ifno); r == -1 {
 		return errno
-	} else {
-		return nil
 	}
 	return nil
 }
