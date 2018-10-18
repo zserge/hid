@@ -18,6 +18,8 @@ type Info struct {
 	Protocol uint8
 
 	Interface uint8
+	Bus       int
+	Device    int
 }
 
 //

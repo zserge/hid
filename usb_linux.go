@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"syscall"
 	"time"
 	"unsafe"
@@ -186,6 +188,9 @@ func cast(b []byte, to interface{}) error {
 	return binary.Read(r, binary.LittleEndian, to)
 }
 
+// typical /dev bus entry: /dev/bus/usb/006/003
+var reDevBusDevice = regexp.MustCompile(`/dev/bus/usb/(\d+)/(\d+)`)
+
 func walker(path string, cb func(Device)) error {
 	if desc, err := ioutil.ReadFile(path); err != nil {
 		return err
@@ -241,6 +246,13 @@ func walker(path string, cb func(Device)) error {
 							return err
 						}
 						if i.InterfaceClass == UsbHidClass {
+							matches := reDevBusDevice.FindStringSubmatch(path)
+							bus := 0
+							dev := 0
+							if len(matches) >= 3 {
+								bus, _ = strconv.Atoi(matches[1])
+								dev, _ = strconv.Atoi(matches[2])
+							}
 							device = &usbDevice{
 								info: Info{
 									Vendor:    devDesc.Vendor,
@@ -249,6 +261,8 @@ func walker(path string, cb func(Device)) error {
 									SubClass:  i.InterfaceSubClass,
 									Protocol:  i.InterfaceProtocol,
 									Interface: i.Number,
+									Bus:       bus,
+									Device:    dev,
 								},
 								path: path,
 							}
