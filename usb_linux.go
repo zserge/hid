@@ -162,8 +162,15 @@ func (hid *usbDevice) HIDReport() ([]byte, error) {
 	}
 }
 
-func (hid *usbDevice) GetReport(report int) ([]byte, error) {
-	buf := make([]byte, 256, 256)
+func (hid *usbDevice) GetReport(report int, opts ...GetReportOption) ([]byte, error) {
+	opt := getReportOptions{
+		bufferSize: 256,
+	}
+	for _, o := range opts {
+		o(&opt)
+	}
+
+	buf := make([]byte, opt.bufferSize, opt.bufferSize)
 	// 10100001, GET_REPORT, type*256+id, intf, len, data
 	n, err := hid.ctrl(0xa1, 0x01, 3<<8+report, int(hid.info.Interface), buf, 1000)
 	if err != nil {
